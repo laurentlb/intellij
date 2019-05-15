@@ -180,18 +180,21 @@ public class BlazeWebTestConfigurationProducer
 
   private static void updateConfigurationName(
       BlazeCommandRunConfiguration configuration, Label wrappedTest, Label wrapperTest) {
-    String wrappedTestSuffix = "_wrapped_test";
+    List<String> wrappedTestSuffixes = ImmutableList.of("_wrapped_test", "_debug");
     String wrappedName = wrappedTest.targetName().toString();
-    if (!wrappedName.endsWith(wrappedTestSuffix)) {
+    for (String suffix : wrappedTestSuffixes) {
+      if (!wrappedName.endsWith(suffix)) {
+        continue;
+      }
+      String baseName = wrappedName.substring(0, wrappedName.lastIndexOf(suffix)) + '_';
+      String wrapperName = wrapperTest.targetName().toString();
+      if (!wrapperName.startsWith(baseName)) {
+        continue;
+      }
+      String platform = wrapperName.substring(baseName.length());
+      configuration.setName(configuration.getName() + " on " + platform);
       return;
     }
-    String baseName = wrappedName.substring(0, wrappedName.lastIndexOf(wrappedTestSuffix)) + '_';
-    String wrapperName = wrapperTest.targetName().toString();
-    if (!wrapperName.startsWith(baseName)) {
-      return;
-    }
-    String platform = wrapperName.substring(baseName.length());
-    configuration.setName(configuration.getName() + " on " + platform);
   }
 
   @Override
