@@ -15,12 +15,18 @@
  */
 package com.google.idea.common.experiments;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * Exposes a system property used to identify the current user as a blaze plugin developer.
  *
  * <p>Used for the purposes of dogfooding experimental features, or turning on additional logging.
  */
 public final class InternalDevFlag {
+
+  @VisibleForTesting
+  static final DeveloperFlag disableInternalDogfood =
+      new DeveloperFlag("disable.internal.dev.dogfood");
 
   private static final String INTERNAL_DEV_SYSTEM_PROPERTY = "blaze.internal.plugin.dev";
 
@@ -29,7 +35,25 @@ public final class InternalDevFlag {
     System.setProperty(INTERNAL_DEV_SYSTEM_PROPERTY, isInternalDev ? "true" : "false");
   }
 
+  /** Returns whether the current user is marked as an internal plugin dev. */
   public static boolean isInternalDev() {
     return System.getProperty(INTERNAL_DEV_SYSTEM_PROPERTY, "false").equals("true");
+  }
+
+  /** Returns whether the current user should dogfood experimental features. */
+  static boolean shouldDogfoodExperiments() {
+    return isInternalDev() && isInternalDevDogfoodingEnabled();
+  }
+
+  /**
+   * Returns whether dogfooding is enabled for internal plugin devs, <strong>regardless of whether
+   * the current user is one</strong>.
+   *
+   * @deprecated You probably want {@link #shouldDogfoodExperiments()} instead.
+   */
+  // # TODO(grl): make this private once FileWatcherSwitch is gone.
+  @Deprecated
+  public static boolean isInternalDevDogfoodingEnabled() {
+    return !disableInternalDogfood.getValue();
   }
 }
